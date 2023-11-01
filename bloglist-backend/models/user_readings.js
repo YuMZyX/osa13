@@ -21,7 +21,7 @@ UserReadings.init({
     references: { model: 'blogs', key: 'id' }
   },
   read: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
   },
