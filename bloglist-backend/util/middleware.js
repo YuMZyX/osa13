@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const { SECRET } = require('../util/config')
+const { User, Session } = require('../models')
 
 const errorHandler = (error, req, res, next) => {
   console.error(error.message)
@@ -33,7 +34,33 @@ const tokenExtractor = (req, res, next) => {
   next()
 }
 
+const sessionCheck = async (req, res, next) => {
+  const user = await User.findByPk(req.decodedToken.id)
+  const session = await Session.findOne({
+    where: {
+      userId: user.id
+    }
+  })
+
+  if (!user.disabled && session) {
+    console.log('Session valid, proceeding...')
+  } else if (!session) {
+    return res.status(401).json({ error: 'Session not found, please login again' })
+  } else if (user.disabled) {
+    await Session.destroy({
+      where: {
+        userId: user.id
+      }
+    })
+    req.decodedToken = ''
+    return res.status(401).json({ error: 'Username disabled, contact admin' })
+  }
+
+  next()
+}
+
 module.exports = {
   errorHandler,
-  tokenExtractor
+  tokenExtractor,
+  sessionCheck
 }
